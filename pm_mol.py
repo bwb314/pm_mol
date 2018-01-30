@@ -57,7 +57,7 @@ class pm_mol():
                 for l in range(n):
                     lin = next(ofil)
                     ls = lin.split()
-                    els.append(ls[0])
+                    els.append(ls[0].upper())
                     coords = [float(x) for x in ls[1:]]
                     geom = np.vstack([geom,coords])
                 mol = [els,geom]
@@ -253,11 +253,20 @@ def com_dister():
         for atom in stored.list: 
             frags[name].append(atom[1])
 
-  
+    coms = [] 
     for f in frags:
+        total_mass = 0.0
+        com = [0.0 for x in range(3)]
         for atom in frags[f]:
             name = total_molecule.mol[0][atom]
             coords = total_molecule.mol[1][atom]
+            mass = el2mass[name]
+            com += mass * coords
+            total_mass += mass
+        com *= (1.0 / total_mass)
+        coms.append(com)
+
+    print(np.linalg.norm(coms[0] - coms[1]))
     # Simple pass, find distance between COM of two fragments
     # ASSUMES only two fragments have been selected
 
