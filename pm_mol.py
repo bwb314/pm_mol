@@ -235,23 +235,38 @@ def read_original_geometry():
     geometry = pm_mol(fil_name)
     return geometry
 
-def com_dister():
+def read_frag_files(fA, fB):    
+
+    frags_A = {}
+    with open(fA, 'r') as fileA: 
+        for lin in fileA:
+            linsplit = lin.split()
+            if len(linsplit) < 2: 
+                continue
+            name = linsplit[0]
+            atoms = [int(x) - 1 for x in linsplit[1:]]
+            frags_A[name] = atoms
+
+    frags_B = {}
+    with open(fB, 'r') as fileB: 
+        for lin in fileB:
+            linsplit = lin.split()
+            if len(linsplit) < 2: 
+                continue
+            name = linsplit[0]
+            atoms = [int(x) - 1 for x in linsplit[1:]]
+            frags_B[name] = atoms
+    
+    return frags_A, frags_B
+    
+
+def com_dister(frags):
+    
+    # Initialize pm molecule object
+    total_molecule = read_original_geometry()
     
     # Make it pretty 
     cmd.show("sticks", "all")
-
-    # Initialize pm molecule object
-    total_molecule = read_original_geometry()
-
-    # Take in user border atoms
-    frag_names = cmd.get_names("all")[1:]
-    frags = {}
-    for name in frag_names:
-        frags[name] = []
-        stored.list=[]
-        cmd.iterate("("+name+")","stored.list.append((name,rank))")
-        for atom in stored.list: 
-            frags[name].append(atom[1])
 
     coms = [] 
     for f in frags:
@@ -266,9 +281,22 @@ def com_dister():
         com *= (1.0 / total_mass)
         coms.append(com)
 
-    print(np.linalg.norm(coms[0] - coms[1]))
+    print(frags.keys(), np.linalg.norm(coms[0] - coms[1]))
     # Simple pass, find distance between COM of two fragments
     # ASSUMES only two fragments have been selected
 
-cmd.extend("com_dister",com_dister)
+def com_dister_all():
+    fA, fB = read_frag_files('fA.dat', 'fB.dat')
+
+    for A in fA:
+        frags_dict = {}
+        frags_dict[A] = fA[A]
+        for B in fB:
+            frags_dict[B] = fB[B]
+            com_dister(frags_dict)
+            del frags_dict[B]
+
     
+cmd.extend("com_dister_all",com_dister_all)
+ 
+#com_dister_all()   
